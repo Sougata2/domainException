@@ -5,10 +5,14 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 
 @RestControllerAdvice
 public class ExceptionAdvice {
@@ -21,6 +25,16 @@ public class ExceptionAdvice {
         errorDto.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         errorDto.setTimestamp(new Timestamp(System.currentTimeMillis()));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorDto);
+    }
+
+    @ExceptionHandler(value = {AuthenticationException.class, BadCredentialsException.class, UsernameNotFoundException.class})
+    public ResponseEntity<ErrorDto> exceptionHandler(BadCredentialsException exception, HttpServletRequest request) {
+        ErrorDto errorDto = new ErrorDto();
+        errorDto.setMessage(exception.getMessage());
+        errorDto.setPath("[%s] : %s".formatted(request.getMethod(), request.getRequestURI()));
+        errorDto.setStatus(HttpStatus.UNAUTHORIZED);
+        errorDto.setTimestamp(new Timestamp(System.currentTimeMillis()));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorDto);
     }
 
     @ExceptionHandler(value = {EntityNotFoundException.class})
