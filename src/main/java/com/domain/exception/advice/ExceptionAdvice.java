@@ -27,6 +27,24 @@ public class ExceptionAdvice {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorDto);
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorDto> handleRuntime(
+            RuntimeException exception, HttpServletRequest request) {
+
+        ErrorDto errorDto = new ErrorDto();
+        errorDto.setMessage(
+                exception.getCause() != null
+                        ? exception.getCause().getMessage()
+                        : exception.getMessage()
+        );
+        errorDto.setPath("[%s] : %s".formatted(request.getMethod(), request.getRequestURI()));
+        errorDto.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        errorDto.setTimestamp(new Timestamp(System.currentTimeMillis()));
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorDto);
+    }
+
+
     @ExceptionHandler(value = {AuthenticationException.class, BadCredentialsException.class, UsernameNotFoundException.class})
     public ResponseEntity<ErrorDto> exceptionHandler(BadCredentialsException exception, HttpServletRequest request) {
         ErrorDto errorDto = new ErrorDto();
